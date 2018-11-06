@@ -119,7 +119,7 @@
   (let [day-num (.getDay (js/Date. year month 1))]
     (mod (- day-num local-first-day) 7)))
 
-(defn gen-days [current-date get save! expanded? auto-close? local-first-day]
+(defn gen-days [current-date get save! expanded? auto-close? cmp-dates local-first-day]
   (let [[year month day] @current-date
         num-days (days-in-month year month)
         last-month-days (if (pos? month) (days-in-month year (dec month)))
@@ -136,7 +136,7 @@
                 date {:year year :month (inc month) :day day}]
             [:td.day
              {:class (when-let [doc-date (get)]
-                       (when (= doc-date date) "active"))
+                       (when (cmp-dates doc-date date) "active"))
               :on-click #(do
                            (swap! current-date assoc-in [2] day)
                            (if (= (get) date)
@@ -210,7 +210,7 @@
                         (reset! view-selector :day))}
                     month-name]))))])))
 
-(defn day-picker [date get save! view-selector expanded? auto-close? {:keys [months days-short first-day]}]
+(defn day-picker [date get save! view-selector expanded? auto-close? cmp-dates {:keys [months days-short first-day]}]
   (let [local-first-day first-day
         local-days-short (->> (cycle days-short)
                               (drop local-first-day) ; first day as offset
@@ -230,9 +230,9 @@
                      ^{:key i}  [:th.dow dow])
                      local-days-short))]
      (into [:tbody]
-           (gen-days date get save! expanded? auto-close? local-first-day))]))
+           (gen-days date get save! expanded? auto-close? cmp-dates local-first-day))]))
 
-(defn datepicker [year month day dom-node mouse-on-list? expanded? auto-close? get save! inline lang]
+(defn datepicker [year month day dom-node mouse-on-list? expanded? auto-close? cmp-dates get save! inline lang]
   (let [date (atom [year month day])
         view-selector (atom :day)
         names (if (and (keyword? lang) (contains? dates lang))
@@ -249,6 +249,6 @@
                                (reset! mouse-on-list? true)
                                (.focus @dom-node))}
        (condp = @view-selector
-         :day   [day-picker date get save! view-selector expanded? auto-close? names]
+         :day   [day-picker date get save! view-selector expanded? auto-close? cmp-dates names]
          :month [month-picker date view-selector names]
          :year  [year-picker date view-selector])])))

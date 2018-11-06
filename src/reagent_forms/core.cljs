@@ -218,7 +218,7 @@
               attrs)])))
 
 (defmethod init-field :datepicker
-  [[_ {:keys [id date-format inline auto-close? disabled lang save-fn] :or {lang :en-US} :as attrs}] {:keys [doc get save! update!]}]
+  [[_ {:keys [id date-format inline auto-close? disabled lang save-fn cmp-dates] :or {lang :en-US} :as attrs}] {:keys [doc get save! update!]}]
   (let [fmt            (if (fn? date-format)
                          date-format
                          #(format-date % (parse-format date-format)))
@@ -234,6 +234,7 @@
         mouse-on-list? (atom false)
         dom-node       (atom nil)
         save-value     (if save-fn #(update! id save-fn %) #(save! id %))]
+        cmp-dates      (or = cmp-dates)
     (r/create-class
       {:component-did-mount
        (fn [this]
@@ -266,7 +267,7 @@
                                          (swap! expanded? not)
                                          (.focus @dom-node)))}
                           [:i.glyphicon.glyphicon-calendar]]]
-                        [datepicker year month day dom-node mouse-on-list? expanded? auto-close? #(get id) save-value inline lang]])})))
+                        [datepicker year month day dom-node mouse-on-list? expanded? auto-close? cmp-dates #(get id) save-value inline lang]])})))
 
 
 (defmethod init-field :checkbox
